@@ -1,5 +1,7 @@
 import { clsx } from 'ui/utils'
-import { InputError } from './error'
+import type { Path } from 'react-hook-form'
+import { getFormContext } from '../form'
+import { getInputErrorId, InputError } from './error'
 import { Label } from './label'
 
 interface TextInputProps {
@@ -14,14 +16,29 @@ interface TextInputProps {
   placeholder?: string
   disabled?: boolean
   readOnly?: boolean
+  'aria-invalid'?: React.AriaAttributes['aria-invalid']
+  'aria-describedby'?: string
   onChange?: React.ChangeEventHandler<HTMLInputElement> | undefined
   onKeyDown?: React.KeyboardEventHandler<HTMLInputElement> | undefined
   onBlur?: React.FocusEventHandler<HTMLInputElement> | undefined
   ref?: React.Ref<HTMLInputElement>
 }
 
-export function Input({ description, label, wrapClass, className, name, ...props }: TextInputProps) {
+export function Input({
+  description,
+  label,
+  wrapClass,
+  className,
+  name,
+  'aria-invalid': ariaInvalid,
+  'aria-describedby': ariaDescribedBy,
+  ...props
+}: TextInputProps) {
   const id = props.id ?? name
+  const context = getFormContext<any>()
+  const errorId = name ? getInputErrorId(name) : undefined
+  const hasError = Boolean(name && context?.hooks.getFieldState(name as Path<any>).error)
+  const describedBy = [ariaDescribedBy, hasError ? errorId : undefined].filter(Boolean).join(' ') || undefined
 
   return (
     <div className={wrapClass}>
@@ -38,10 +55,11 @@ export function Input({ description, label, wrapClass, className, name, ...props
         )}
         name={name}
         id={id}
+        aria-invalid={context && name ? (ariaInvalid ?? hasError) : ariaInvalid}
+        aria-describedby={describedBy}
         {...props}
       />
-      {/* @ts-expect-error */}
-      <InputError name={name} />
+      <InputError<any> name={name} id={errorId} />
     </div>
   )
 }

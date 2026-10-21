@@ -21,6 +21,8 @@ interface PopoverTriggerProps {
   disabled?: boolean
   asChild?: boolean
   style?: React.CSSProperties
+  'aria-invalid'?: React.AriaAttributes['aria-invalid']
+  'aria-describedby'?: string
 }
 
 export function PopoverTrigger({ children, asChild, ...props }: PopoverTriggerProps) {

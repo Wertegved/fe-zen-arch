@@ -6,7 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from 'ui/interactive/popover'
 import { PopoverContext } from 'ui/interactive/popover-context'
 import { clsx, DisallowNever, getContext } from 'ui/utils'
 import { getFormContext } from '../form'
-import { InputError } from './error'
+import { getInputErrorId, InputError } from './error'
 import { Label } from './label'
 
 type SelectValue = number | string
@@ -26,6 +26,8 @@ export interface BaseSelectProps {
   wrapClass?: string
   maxHeight?: string
   readOnly?: boolean
+  'aria-invalid'?: React.AriaAttributes['aria-invalid']
+  'aria-describedby'?: string
 }
 
 export interface FormSelectProps<T> extends BaseSelectProps {
@@ -38,7 +40,8 @@ export interface FormSelectProps<T> extends BaseSelectProps {
 export function Select<T>({ name, options, deps = [], rules, ...props }: FormSelectProps<DisallowNever<T>>) {
   const ctx = getFormContext()
   const {
-    field: { onChange, value, ref, disabled }
+    field: { onChange, value, ref, disabled },
+    fieldState: { invalid }
   } = useController({
     name: name,
     control: ctx.hooks.control,
@@ -46,6 +49,8 @@ export function Select<T>({ name, options, deps = [], rules, ...props }: FormSel
     disabled: props.disabled
   })
   const firstRender = useRef<boolean>(true)
+  const errorId = getInputErrorId(name)
+  const describedBy = [props['aria-describedby'], invalid ? errorId : undefined].filter(Boolean).join(' ') || undefined
 
   // Use useEffect to reset the value when options change and current selected value isn't in options
   useEffect(() => {
@@ -66,7 +71,9 @@ export function Select<T>({ name, options, deps = [], rules, ...props }: FormSel
       onChange={onChange}
       inputRef={ref}
       disabled={disabled}
-      inputError={<InputError name={name} />}
+      aria-invalid={invalid}
+      aria-describedby={describedBy}
+      inputError={<InputError name={name} id={errorId} />}
     />
   )
 }
@@ -144,6 +151,8 @@ function SelectBase({ options, disabled, value, readOnly, ...props }: SelectInne
             'outline-focus-select group flex w-full cursor-pointer items-center justify-between rounded border pr-2',
             props.triggerClass
           )}
+          aria-invalid={props['aria-invalid']}
+          aria-describedby={props['aria-describedby']}
           style={disabled ? { cursor: 'not-allowed', opacity: 0.5 } : undefined}
           // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
           disabled={readOnly || disabled}>

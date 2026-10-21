@@ -5,9 +5,14 @@ import { FormContextData, getFormContext, getNestedSchema } from '../form'
 
 interface Props<T> {
   name: Path<T> | undefined
+  id?: string
 }
 
-export function InputError<T>({ name }: Props<DisallowNever<T>>) {
+export function getInputErrorId(name: string) {
+  return `input-error-${name}`
+}
+
+export function InputError<T>({ name, id }: Props<DisallowNever<T>>) {
   if (name == null) return
   const context = getFormContext() as FormContextData<any> | undefined
   if (context == null) return null
@@ -20,7 +25,7 @@ export function InputError<T>({ name }: Props<DisallowNever<T>>) {
     error.message != '' ? error.message : getErrorMessage(error, getNestedSchema(name, context.schema))
 
   return (
-    <div className="mt-1 flex items-center text-sm text-red-500">
+    <div id={id} className="mt-1 flex items-center text-sm text-red-500">
       <RrExclamation className="mr-1 size-3" />
       <span>{errorMessage as string}</span>
     </div>
